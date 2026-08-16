@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>てき図鑑 CATDB Enemy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#170F14;
+    --panel:#F6F1E3;
+    --panel-edge:#c9bd98;
+    --ink:#1C2333;
+    --ink-soft:#5b5546;
+    --navy:#2A1620;
+    --navy-soft:#3a2130;
+    --crimson:#C1443B;
+    --crimson-dark:#8f2f28;
+    --gold:#E3A72B;
+    --line:#d8cca4;
+    --mono:'JetBrains Mono', 'Courier New', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Noto Sans JP', sans-serif;
+    padding-bottom:60px;
+  }
+  header.top{
+    background:linear-gradient(180deg, var(--navy) 0%, #170f14 100%);
+    color:#eee7d0; padding:22px 28px 18px;
+    border-bottom:4px solid var(--crimson);
+    position:sticky; top:0; z-index:20;
+  }
+  header.top .brand{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  header.top h1{
+    font-family:'Zen Kaku Gothic New', sans-serif; font-weight:900;
+    font-size:1.7em; margin:0; letter-spacing:.04em;
+  }
+  header.top .subtitle{
+    font-family:var(--mono); font-size:.72em; color:var(--crimson);
+    letter-spacing:.15em; text-transform:uppercase;
+  }
+  header.top .count{ margin-top:6px; font-size:.8em; color:#c9b9bc; font-family:var(--mono); }
+  header.top .count b{ color:var(--crimson); font-size:1.1em; }
+  .nav-switch{
+    margin-left:auto; font-family:var(--mono); font-size:.78em; color:#eee7d0;
+    text-decoration:none; border:1px solid #4a2c38; padding:6px 12px; border-radius:999px;
+    background:#1f1219;
+  }
+  .nav-switch:hover{ border-color:var(--gold); color:var(--gold); }
+
+  .layout{ display:flex; gap:18px; max-width:1500px; margin:20px auto 0; padding:0 18px; align-items:flex-start; }
+
+  .filters{
+    flex:0 0 300px; background:var(--navy); border:1px solid #4a2c38;
+    border-radius:4px; padding:18px; position:sticky; top:130px;
+    max-height:calc(100vh - 150px); overflow-y:auto;
+  }
+  .filters h2{
+    font-family:'Zen Kaku Gothic New',sans-serif; font-size:.95em; color:var(--crimson);
+    margin:0 0 14px; padding-bottom:8px; border-bottom:1px dashed #4a2c38;
+    letter-spacing:.08em;
+  }
+  .f-group{ margin-bottom:16px; }
+  .f-group label.f-title{
+    display:block; font-size:.72em; color:#c0a9b0; margin-bottom:5px;
+    letter-spacing:.06em; font-family:var(--mono);
+  }
+  .filters input[type=text], .filters select, .filters input[type=number]{
+    width:100%; padding:7px 8px; border-radius:3px; border:1px solid #4a2c38;
+    background:#1f1219; color:#eee7d0; font-size:.85em; font-family:'Noto Sans JP',sans-serif;
+  }
+  .filters input[type=number]{ font-family:var(--mono); }
+  .range-row{ display:flex; align-items:center; gap:6px; }
+  .range-row span{ color:#8a7078; font-size:.8em; }
+  .kw-grid{ display:flex; flex-wrap:wrap; gap:5px; }
+  .kw-chip{
+    font-size:.72em; color:#dcc9ce; background:#1f1219; border:1px solid #4a2c38;
+    padding:4px 8px; border-radius:999px; cursor:pointer; user-select:none;
+    display:flex; align-items:center; gap:4px;
+  }
+  .kw-chip input{ display:none; }
+  .kw-chip:has(input:checked){
+    background:var(--crimson); border-color:var(--crimson-dark); color:#fff; font-weight:700;
+  }
+  .btn-row{ display:flex; gap:8px; margin-top:16px; }
+  .btn{
+    flex:1; text-align:center; padding:10px; border-radius:3px; font-weight:700;
+    font-size:.85em; border:none; cursor:pointer; text-decoration:none; display:block;
+  }
+  .btn-primary{ background:var(--crimson); color:#fff; }
+  .btn-primary:hover{ background:#d65a50; }
+  .btn-ghost{ background:transparent; border:1px solid #4a2c38; color:#c0a9b0; }
+  .btn-ghost:hover{ border-color:var(--gold); color:var(--gold); }
+
+  .results{ flex:1; min-width:0; }
+  .toolbar{
+    background:var(--panel); border:1px solid var(--panel-edge); border-radius:4px 4px 0 0;
+    padding:10px 16px; display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:8px; font-size:.82em; color:var(--ink-soft);
+  }
+  .toolbar .sort-select{ font-family:var(--mono); padding:5px 6px; border-radius:3px; border:1px solid var(--panel-edge); background:#fff; }
+  .btn-copy{
+    font-family:var(--mono); font-size:.78em; font-weight:700; padding:7px 12px;
+    border-radius:3px; border:1px solid var(--crimson-dark); background:var(--crimson);
+    color:#fff; cursor:pointer; white-space:nowrap;
+  }
+  .btn-copy:hover{ background:#d65a50; }
+  .btn-copy.copied{ background:#5c9a7c; border-color:#3f6f56; color:#fff; }
+
+  .table-wrap{
+    background:var(--panel); border:1px solid var(--panel-edge); border-top:none;
+    border-radius:0 0 4px 4px; overflow-x:auto;
+    transform-origin: 0 0; touch-action: pan-x pan-y;
+  }
+  table{ width:100%; border-collapse:collapse; min-width:1080px; }
+  thead th{
+    position:sticky; top:0; background:#ece4cb; color:var(--ink);
+    font-family:var(--mono); font-size:.72em; text-align:center; padding:9px 4px;
+    border-bottom:2px solid var(--panel-edge); white-space:nowrap;
+  }
+  tbody td{ padding:9px 6px; border-bottom:1px solid var(--line); font-size:.82em; text-align:center; vertical-align:top; }
+  tbody tr:hover{ background:#fbf7ea; }
+  .col-name{ text-align:left; min-width:190px; }
+  .name-main{ font-weight:700; font-size:1.03em; }
+  .catalog-no{ font-family:var(--mono); font-weight:600; color:var(--crimson-dark); font-size:.85em; }
+  .name-sub{ display:flex; gap:5px; margin-top:4px; flex-wrap:wrap; }
+  .tag{
+    font-size:.65em; font-family:var(--mono); padding:2px 6px; border-radius:2px;
+    border:1px solid var(--panel-edge); color:var(--ink-soft);
+  }
+  .tag-collabo{ background:var(--crimson); color:#fff; border-color:var(--crimson-dark); font-weight:700; transform:rotate(-2deg); display:inline-block; }
+  .tag-target{ background:#e4dcc0; }
+  .tag-attr{ background:#e0d6ea; border-color:#b9a6cf; color:#4a3866; }
+  .tag-immune{ background:#dfe9e6; border-color:#9fb8b2; color:#2f5951; }
+  .num{ font-family:var(--mono); font-weight:600; }
+  .col-ability{ text-align:left; max-width:260px; font-size:.78em; color:var(--ink-soft); line-height:1.5; }
+  .col-ability .more{ color:var(--crimson-dark); font-size:.85em; }
+  .col-link a{ font-size:.72em; color:var(--crimson-dark); text-decoration:none; }
+  .col-link a:hover{ text-decoration:underline; }
+  .empty-row td{ text-align:center; padding:50px 20px; color:var(--ink-soft); }
+
+  .col-mult{ min-width:140px; }
+  .mult-box{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .mult-box input[type=range]{ width:110px; accent-color:var(--crimson); }
+  .mult-box input[type=number]{
+    width:64px; font-family:var(--mono); font-size:.78em; text-align:center;
+    padding:2px 4px; border:1px solid var(--panel-edge); border-radius:3px;
+  }
+  .mult-label{ font-family:var(--mono); font-size:.72em; color:var(--crimson-dark); font-weight:700; }
+  td.scaled.is-scaled{ color:var(--crimson-dark); font-weight:800; }
+
+  .char-row{ cursor:pointer; }
+  .char-row:hover{ background:#fbf7ea; }
+
+  .detail-panel{
+    margin-top:14px; background:var(--navy); border:1px solid #4a2c38; border-radius:6px;
+    padding:16px 18px; color:#eee7d0; position:relative;
+  }
+  .detail-close{
+    position:absolute; top:10px; right:12px; background:transparent; border:1px solid #4a2c38;
+    color:#c0a9b0; border-radius:3px; padding:4px 10px; font-size:.75em; cursor:pointer; font-family:var(--mono);
+  }
+  .detail-close:hover{ border-color:var(--crimson); color:var(--crimson); }
+  .detail-name{
+    font-family:'Zen Kaku Gothic New',sans-serif; font-weight:900; font-size:1.15em;
+    margin:0 0 4px; color:#fff;
+  }
+  .detail-sub{ font-family:var(--mono); font-size:.75em; color:#c0a9b0; margin-bottom:10px; }
+
+  .detail-stats-group{ margin-bottom:10px; }
+  .detail-stats-group-label{ font-family:var(--mono); font-size:.72em; color:var(--crimson); margin-bottom:4px; }
+  .detail-stats{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(90px,1fr)); gap:10px;
+    background:#1f1219; border:1px solid #4a2c38; border-radius:4px; padding:12px;
+  }
+  .detail-stats-ev{ grid-template-columns:repeat(auto-fit, minmax(110px,1fr)); }
+  .detail-stat-box{ text-align:center; position:relative; }
+  .detail-stat-box .label{ font-family:var(--mono); font-size:.65em; color:#c0a9b0; }
+  .detail-stat-box .value{ font-family:var(--mono); font-size:1.05em; font-weight:700; color:var(--crimson); margin-top:2px; }
+  .detail-stat-box .value.is-boosted{ color:#7fd9a0; }
+  .ev-box{ border:1px solid #7fd9a0; border-radius:4px; padding:4px; }
+  .ev-corner-tag{
+    position:absolute; top:-8px; left:2px; font-family:var(--mono); font-size:.55em;
+    color:#1c1400; background:var(--crimson); padding:1px 5px; border-radius:3px; white-space:nowrap;
+  }
+  .applied-tag-row{ margin-bottom:4px; }
+  .applied-tag{
+    font-family:var(--mono); font-size:.6em; background:var(--crimson); color:#fff;
+    padding:2px 6px; border-radius:3px; margin-right:4px;
+  }
+
+  .trait-section{ margin-top:14px; }
+  .trait-section h3{
+    font-family:'Zen Kaku Gothic New',sans-serif; font-size:.85em; color:var(--crimson);
+    margin:0 0 8px; border-bottom:1px dashed #4a2c38; padding-bottom:6px;
+  }
+  .trait-btn-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .trait-btn{
+    font-family:var(--mono); font-size:.78em; padding:8px 14px; border-radius:999px;
+    border:1px solid #4a2c38; background:#1f1219; color:#dcc9ce; cursor:pointer;
+  }
+  .trait-btn:hover{ border-color:var(--crimson); }
+  .trait-btn.active{ background:var(--crimson); border-color:var(--crimson-dark); color:#fff; font-weight:700; }
+  .ev-trait-btn.active{ background:#5c9a7c; border-color:#3f6f56; color:#fff; }
+
+  .pager{
+    display:flex; justify-content:center; align-items:center; gap:10px; margin-top:16px;
+    font-family:var(--mono); font-size:.82em; color:#dcc9ce;
+  }
+  .pager a, .pager span.current{
+    padding:6px 12px; border-radius:3px; text-decoration:none; border:1px solid #4a2c38; color:#dcc9ce;
+  }
+  .pager span.current{ background:var(--crimson); color:#fff; border-color:var(--crimson-dark); font-weight:700; }
+  .pager a:hover{ border-color:var(--crimson); color:var(--crimson); }
+
+  @media (max-width: 900px){
+    .layout{ display:block; padding:0 8px; }
+    .results{ min-width:0; margin-bottom:44vh; }
+    .filters{
+      position:fixed; top:auto; left:0; right:0; bottom:0; z-index:30;
+      width:100%; max-height:40vh; overflow-y:auto;
+      border-radius:14px 14px 0 0; box-shadow:0 -6px 20px rgba(0,0,0,.45);
+      padding:10px 8px 14px;
+    }
+    .filters::before{
+      content:""; display:block; width:40px; height:4px; margin:0 auto 8px;
+      background:#4a2c38; border-radius:999px;
+    }
+    .filters h2{ font-size:.72em; margin-bottom:8px; }
+    .f-group{ margin-bottom:10px; }
+    .f-group label.f-title{ font-size:.6em; }
+    .filters input[type=text], .filters select, .filters input[type=number]{
+      font-size:.72em; padding:5px 4px;
+    }
+    .kw-grid{ gap:3px; }
+    .kw-chip{ font-size:.6em; padding:3px 5px; }
+    .btn{ font-size:.72em; padding:8px; }
+    header.top{ padding:8px 12px; }
+    header.top h1, header.top .subtitle{ display:none; }
+    .col-name{ padding-right:2px; min-width:130px; }
+    .col-mult{ padding-left:2px; min-width:96px; }
+    .col-mult .mult-box input[type=range]{ width:80px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <h1>👹 てき図鑑 CATDB Enemy</h1>
+    <span class="subtitle">Battle Cats Enemy Database</span>
+    <a href="{{ url_for('ally.zukan') }}" class="nav-switch">🐾 味方図鑑を見る →</a>
+  </div>
+  <div class="count">該当する敵数　<b>{{ total }}</b> 体　（{{ page }} / {{ total_pages }} ページ）</div>
+</header>
+
+<div class="layout">
+  <!-- ===== フィルターパネル ===== -->
+  <aside class="filters">
+    <form method="get" action="{{ url_for(request.endpoint) }}">
+      <h2>基本条件</h2>
+      <div class="f-group">
+        <label class="f-title">敵名検索</label>
+        <input type="text" name="q" value="{{ q }}" placeholder="例）ドゲザル">
+      </div>
+      <div class="f-group">
+        <label class="f-title">コラボ</label>
+        <select name="collabo">
+          <option value="all" {{ 'selected' if collabo=='all' }}>すべて</option>
+          <option value="yes" {{ 'selected' if collabo=='yes' }}>コラボのみ</option>
+          <option value="no" {{ 'selected' if collabo=='no' }}>コラボ除く</option>
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-title">対象</label>
+        <select name="target">
+          <option value="all" {{ 'selected' if target=='all' }}>すべて</option>
+          <option value="単体" {{ 'selected' if target=='単体' }}>単体</option>
+          <option value="範囲" {{ 'selected' if target=='範囲' }}>範囲</option>
+        </select>
+      </div>
+
+      <h2>ステータス範囲（倍率100%基準）</h2>
+      {% for field, label in [('hp','体力'), ('atk','攻撃力'), ('dps','DPS'), ('range','射程'), ('speed','速度')] %}
+      <div class="f-group">
+        <label class="f-title">{{ label }}</label>
+        <div class="range-row">
+          <input type="number" name="{{ field }}_min" value="{{ args.get(field+'_min','') }}" placeholder="min">
+          <span>〜</span>
+          <input type="number" name="{{ field }}_max" value="{{ args.get(field+'_max','') }}" placeholder="max">
+        </div>
+      </div>
+      {% endfor %}
+
+      <h2>属性</h2>
+      <div class="kw-grid">
+        {% for kid, label in attribute_keywords %}
+        <label class="kw-chip">
+          <input type="checkbox" name="kw_{{ kid }}" value="1" {{ 'checked' if kid in selected_attrs }}>
+          {{ label }}
+        </label>
+        {% endfor %}
+      </div>
+
+      <h2 style="margin-top:16px;">特性</h2>
+      <div class="kw-grid">
+        {% for kid, label, _, _r in effect_keywords %}
+        <label class="kw-chip">
+          <input type="checkbox" name="kw_{{ kid }}" value="1" {{ 'checked' if kid in selected_effects }}>
+          {{ label }}
+        </label>
+        {% endfor %}
+      </div>
+
+      <h2 style="margin-top:16px;">耐性・無効</h2>
+      <div class="kw-grid">
+        {% for kid, label, _ in immunity_keywords %}
+        <label class="kw-chip">
+          <input type="checkbox" name="kw_{{ kid }}" value="1" {{ 'checked' if kid in selected_immunities }}>
+          {{ label }}
+        </label>
+        {% endfor %}
+      </div>
+
+      <input type="hidden" name="sort" value="{{ sort_key }}">
+      <input type="hidden" name="dir" value="{{ sort_dir }}">
+
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary">絞り込む</button>
+        <a href="{{ url_for(request.endpoint) }}" class="btn btn-ghost">リセット</a>
+      </div>
+    </form>
+  </aside>
+
+  <!-- ===== 結果テーブル ===== -->
+  <main class="results">
+    <div class="toolbar">
+      <button type="button" class="btn-copy" id="copyNamesBtn" onclick="copyAllNames()">
+        📋 該当する敵名を一括コピー（{{ total }}件）
+      </button>
+      <span>並び替え</span>
+      <form method="get" action="{{ url_for(request.endpoint) }}" id="sortform" style="display:flex; gap:6px; align-items:center;">
+        {% for k, v in args.items() %}{% if k not in ['sort','dir','page'] %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+        <select name="sort" class="sort-select" onchange="document.getElementById('sortform').submit()">
+          <option value="no" {{ 'selected' if sort_key=='no' }}>図鑑番号</option>
+          <option value="name" {{ 'selected' if sort_key=='name' }}>名前</option>
+          <option value="hp" {{ 'selected' if sort_key=='hp' }}>体力</option>
+          <option value="atk" {{ 'selected' if sort_key=='atk' }}>攻撃力</option>
+          <option value="dps" {{ 'selected' if sort_key=='dps' }}>DPS</option>
+          <option value="range" {{ 'selected' if sort_key=='range' }}>射程</option>
+          <option value="speed" {{ 'selected' if sort_key=='speed' }}>速度</option>
+        </select>
+        <select name="dir" class="sort-select" onchange="document.getElementById('sortform').submit()">
+          <option value="asc" {{ 'selected' if sort_dir=='asc' }}>昇順</option>
+          <option value="desc" {{ 'selected' if sort_dir=='desc' }}>降順</option>
+        </select>
+      </form>
+    </div>
+
+    <textarea id="allNamesData" hidden>{% for n in all_matched_names %}{{ n }}
+{% endfor %}</textarea>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-name">敵キャラクター</th>
+            <th class="col-mult">倍率</th>
+            <th>体力</th>
+            <th>攻撃力</th>
+            <th>DPS</th>
+            <th>射程</th>
+            <th>速度</th>
+            <th>特性</th>
+            <th>詳細</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in characters %}
+          <tr class="char-row" onclick="showDetail({{ c.id }}, event)">
+            <td class="col-name">
+              <div class="name-main">{% if c.catalog_no is not none %}<span class="catalog-no">No.{{ '%03d'|format(c.catalog_no) }}</span> {% endif %}{{ c.name }}</div>
+              <div class="name-sub">
+                {% if c.target %}<span class="tag tag-target">{{ c.target }}</span>{% endif %}
+                {% if c.is_collabo %}<span class="tag tag-collabo">コラボ</span>{% endif %}
+                {% for kid in c.attributes %}<span class="tag tag-attr">{{ attribute_labels[kid] }}</span>{% endfor %}
+                {% for kid in c.immunity_tags %}<span class="tag tag-immune">{{ immunity_labels[kid] }}</span>{% endfor %}
+              </div>
+            </td>
+            <td class="col-mult">
+              <div class="mult-box">
+                <input type="range" min="1" max="500" step="1" value="100"
+                       oninput="onMultRangeInput({{ c.id }}, this.value)"
+                       id="range-{{ c.id }}">
+                <div>
+                  <input type="number" min="1" max="9999" step="1" value="100"
+                         oninput="onMultNumberInput({{ c.id }}, this.value)"
+                         onblur="onMultNumberBlur({{ c.id }})"
+                         id="num-{{ c.id }}"> <span class="mult-label">%</span>
+                </div>
+              </div>
+            </td>
+            <td class="num scaled" id="hp-{{ c.id }}" data-base="{{ c.hp if c.hp is not none else '' }}">{{ c.hp|int if c.hp is not none else '---' }}</td>
+            <td class="num scaled" id="atk-{{ c.id }}" data-base="{{ c.atk if c.atk is not none else '' }}">{{ c.atk|int if c.atk is not none else '---' }}</td>
+            <td class="num scaled" id="dps-{{ c.id }}" data-base="{{ c.dps if c.dps is not none else '' }}">{{ c.dps|int if c.dps is not none else '---' }}</td>
+            <td class="num">{{ c.range|int if c.range is not none else '---' }}</td>
+            <td class="num">{{ c.speed|int if c.speed is not none else '---' }}</td>
+            <td class="col-ability">
+              {% if c.abilities %}
+                {% for a in c.abilities[:2] %}・{{ a }}<br>{% endfor %}
+                {% if c.abilities|length > 2 %}<span class="more">他{{ c.abilities|length - 2 }}件</span>{% endif %}
+              {% else %}
+                なし
+              {% endif %}
+            </td>
+            <td class="col-link">{% if c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener">元データ→</a>{% endif %}</td>
+          </tr>
+          {% else %}
+          <tr class="empty-row"><td colspan="9">条件に一致する敵が見つかりませんでした。フィルター条件を見直してください。</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="detailPanel" class="detail-panel" hidden>
+      <button type="button" class="detail-close" onclick="closeDetail()">✕ 閉じる</button>
+      <div id="detailContent"></div>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pager">
+      {% set base_params = args.to_dict() %}
+      {% if page > 1 %}
+        {% set _ = base_params.update({'page': page-1}) %}
+        <a href="{{ url_for(request.endpoint) }}?{{ base_params|urlencode }}">← 前へ</a>
+      {% endif %}
+      <span class="current">{{ page }} / {{ total_pages }}</span>
+      {% if page < total_pages %}
+        {% set _ = base_params.update({'page': page+1}) %}
+        <a href="{{ url_for(request.endpoint) }}?{{ base_params|urlencode }}">次へ →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </main>
+</div>
+
+<script>
+const EV_TRAITS = {{ ev_traits_json|safe }};
+let activeDetailId = null;
+let activeEvTraitIds = new Set();
+
+function readStat(id, key) {
+  const el = document.getElementById(key + '-' + id);
+  if (!el) return null;
+  const v = parseFloat(el.textContent.replace(/,/g, ''));
+  return isNaN(v) ? null : v;
+}
+
+function combinedStatGroupHtml(label, hp, atkNormal, atkAllEv, dpsVal, appliedTags) {
+  const fmt = function(v) { return (v !== null && v !== undefined) ? Math.round(v).toLocaleString() : '---'; };
+  const dpsLabel = 'DPS' + (atkAllEv !== null ? '（期待値）' : '');
+  let html = '<div class="detail-stats-group">';
+  if (label) html += '<div class="detail-stats-group-label">' + label + '</div>';
+  html += '<div class="detail-stats' + (atkAllEv !== null ? ' detail-stats-ev' : '') + '">';
+  html += '<div class="detail-stat-box"><div class="label">体力</div><div class="value">' + fmt(hp) + '</div></div>';
+  if (atkAllEv !== null) {
+    html += '<div class="detail-stat-box"><div class="label">攻撃力（通常時）</div><div class="value">' + fmt(atkNormal) + '</div></div>';
+    html += '<div class="detail-stat-box ev-box">';
+    if (appliedTags && appliedTags.length > 0) {
+      html += '<div class="ev-corner-tag">' + appliedTags.join(' / ') + '</div>';
+    }
+    html += '<div class="label">攻撃力（全て発動時）</div><div class="value is-boosted">' + fmt(atkAllEv) + '</div></div>';
+  } else {
+    html += '<div class="detail-stat-box"><div class="label">攻撃力</div><div class="value">' + fmt(atkNormal) + '</div></div>';
+  }
+  html += '<div class="detail-stat-box"><div class="label">' + dpsLabel + '</div><div class="value' + (atkAllEv !== null ? ' is-boosted' : '') + '">' + fmt(dpsVal) + '</div></div>';
+  html += '</div></div>';
+  return html;
+}
+
+function showDetail(id, event) {
+  if (event && event.target.closest('input, a, .mult-box')) return;
+
+  activeDetailId = id;
+  activeEvTraitIds = new Set();
+
+  const row = event.currentTarget;
+  const nameMain = row.querySelector('.name-main').textContent.trim();
+  const tagEls = row.querySelectorAll('.name-sub .tag');
+  const nameSub = Array.from(tagEls).map(function(el){ return el.textContent.trim(); }).join(' ／ ');
+
+  const evTraits = EV_TRAITS[String(id)] || [];
+
+  let html = '';
+  html += '<div class="detail-name">' + nameMain + '</div>';
+  html += '<div class="detail-sub">' + nameSub + '</div>';
+  html += '<div id="detailStatsArea"></div>';
+
+  if (evTraits.length > 0) {
+    html += '<div class="trait-section"><h3>波動・烈波などの期待値表示（複数オンで重ねがけ）</h3>';
+    html += '<div class="trait-btn-row">';
+    evTraits.forEach(function(t) {
+      html += '<button type="button" class="trait-btn ev-trait-btn" id="evtraitbtn-' + t.id + '" onclick="toggleEvTrait(\'' + t.id + '\')">' + t.display + '</button>';
+    });
+    html += '</div></div>';
+  }
+
+  document.getElementById('detailContent').innerHTML = html;
+  const panel = document.getElementById('detailPanel');
+  panel.hidden = false;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  renderTraitResults();
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').hidden = true;
+  activeDetailId = null;
+  activeEvTraitIds = new Set();
+}
+
+function toggleEvTrait(traitId) {
+  const btn = document.getElementById('evtraitbtn-' + traitId);
+  if (activeEvTraitIds.has(traitId)) {
+    activeEvTraitIds.delete(traitId);
+    if (btn) btn.classList.remove('active');
+  } else {
+    activeEvTraitIds.add(traitId);
+    if (btn) btn.classList.add('active');
+  }
+  renderTraitResults();
+}
+
+function renderTraitResults() {
+  if (activeDetailId === null) return;
+  const area = document.getElementById('detailStatsArea');
+  if (!area) return;
+
+  const baseHp = readStat(activeDetailId, 'hp');
+  const baseAtk = readStat(activeDetailId, 'atk');
+  const baseDps = readStat(activeDetailId, 'dps');
+
+  const evTraits = EV_TRAITS[String(activeDetailId)] || [];
+  const activeEv = evTraits.filter(function(t) { return activeEvTraitIds.has(t.id); });
+
+  if (activeEv.length === 0) {
+    area.innerHTML = combinedStatGroupHtml('', baseHp, baseAtk, null, baseDps, []);
+    return;
+  }
+
+  // 波動・烈波・爆波・クリティカル・渾身の一撃などは、全て同時に発動した場合の
+  // 攻撃力（掛け算）とDPS期待値（それぞれの発生確率をもとに合成）を求める
+  let evAtkMult = 1, evDpsMult = 1;
+  activeEv.forEach(function(t) {
+    evAtkMult *= t.atkMult;
+    evDpsMult *= (1 + t.dpsCoef * t.prob);
+  });
+  const label = activeEv.map(function(t) { return t.display; }).join(' ＋ ');
+  const appliedTags = activeEv.filter(function(t) { return t.appliedTag; }).map(function(t) { return t.appliedTag; });
+
+  const atkAllEv = baseAtk !== null ? Math.round(baseAtk * evAtkMult) : null;
+  const dps = baseDps !== null ? Math.round(baseDps * evDpsMult) : null;
+
+  area.innerHTML = combinedStatGroupHtml(label, baseHp, baseAtk, atkAllEv, dps, appliedTags);
+}
+</script>
+
+<script>
+function applyMultScale(id, v) {
+  ['hp', 'atk', 'dps'].forEach(function(key) {
+    const cell = document.getElementById(key + '-' + id);
+    if (!cell) return;
+    const base = parseFloat(cell.dataset.base);
+    if (isNaN(base)) return;
+    const scaled = Math.round(base * v / 100);
+    cell.textContent = scaled.toLocaleString();
+    cell.classList.toggle('is-scaled', v !== 100);
+  });
+}
+
+// スライダー操作時：常に数値欄と同期
+function onMultRangeInput(id, value) {
+  let v = parseFloat(value);
+  if (isNaN(v) || v < 1) v = 1;
+  document.getElementById('num-' + id).value = v;
+  applyMultScale(id, v);
+}
+
+// 数値欄への直接入力時：入力途中の文字列を勝手に書き換えない
+// （空にして打ち直したい時に値が強制的に戻ってしまうのを防ぐため）
+function onMultNumberInput(id, value) {
+  if (value === '') {
+    return; // 入力中は何もしない。確定はonMultNumberBlurで行う
+  }
+  let v = parseFloat(value);
+  if (isNaN(v)) return;
+  if (v < 1) v = 1;
+  if (v > 9999) v = 9999;
+  const rangeEl = document.getElementById('range-' + id);
+  if (rangeEl) rangeEl.value = Math.min(v, 500);
+  applyMultScale(id, v);
+}
+
+// 数値欄からフォーカスが外れた時：空欄なら100%として確定する
+function onMultNumberBlur(id) {
+  const numEl = document.getElementById('num-' + id);
+  let v = parseFloat(numEl.value);
+  if (numEl.value === '' || isNaN(v)) v = 100;
+  if (v < 1) v = 1;
+  if (v > 9999) v = 9999;
+  numEl.value = v;
+  const rangeEl = document.getElementById('range-' + id);
+  if (rangeEl) rangeEl.value = Math.min(v, 500);
+  applyMultScale(id, v);
+}
+
+function copyAllNames() {
+  const text = document.getElementById('allNamesData').value.trim();
+  const btn = document.getElementById('copyNamesBtn');
+  const originalLabel = btn.textContent;
+
+  function showCopied() {
+    btn.textContent = '✔ コピーしました';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = originalLabel;
+      btn.classList.remove('copied');
+    }, 1800);
+  }
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopy(text, showCopied));
+  } else {
+    fallbackCopy(text, showCopied);
+  }
+}
+
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    onDone();
+  } catch (e) {
+    alert('コピーに失敗しました。手動で選択してコピーしてください。');
+  }
+  document.body.removeChild(ta);
+}
+
+// --- テーブル領域のみを対象にしたピンチズーム（ページ全体はズームしない） ---
+(function() {
+  const wrap = document.querySelector('.table-wrap');
+  if (!wrap) return;
+
+  let startDistance = null;
+  let startZoom = 1;
+  let currentZoom = 1;
+  let gestureHadPinch = false;
+  let lastTap = 0;
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 3;
+
+  function getDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  wrap.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+      gestureHadPinch = true;
+      startDistance = getDistance(e.touches);
+      startZoom = currentZoom;
+    } else if (e.touches.length === 1 && !startDistance) {
+      gestureHadPinch = false;
+    }
+  }, { passive: true });
+
+  wrap.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 2 && startDistance) {
+      e.preventDefault();
+      const newDistance = getDistance(e.touches);
+      let scale = startZoom * (newDistance / startDistance);
+      scale = Math.min(Math.max(scale, MIN_ZOOM), MAX_ZOOM);
+      currentZoom = scale;
+      wrap.style.zoom = scale;
+    }
+  }, { passive: false });
+
+  wrap.addEventListener('touchend', function(e) {
+    if (e.touches.length < 2) {
+      startDistance = null;
+    }
+    if (e.touches.length === 0) {
+      const now = Date.now();
+      // ピンチ操作の終了（指を離す動作）を誤ってダブルタップと判定しないようにする
+      if (!gestureHadPinch && now - lastTap < 300) {
+        currentZoom = 1;
+        wrap.style.zoom = 1;
+      }
+      lastTap = now;
+      gestureHadPinch = false;
+    }
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
